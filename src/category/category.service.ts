@@ -8,9 +8,9 @@ import { Prisma } from 'generated/prisma/client';
 export class CategoryService {
   constructor(private readonly databaseService: DatabaseService){}
 
-  async create(createCategoryDto: Prisma.CategoryCreateInput) {
+  async create(createCategoryDto: CreateCategoryDto) {
     return this.databaseService.category.create({
-      data: createCategoryDto
+      data: createCategoryDto as unknown as Prisma.CategoryCreateInput
     });
   }
 

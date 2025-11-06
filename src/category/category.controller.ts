@@ -1,15 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { Prisma } from 'generated/prisma/client';
 
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  create(@Body() createCategoryDto: Prisma.CategoryCreateInput) {
+  create(@Body(ValidationPipe) createCategoryDto: CreateCategoryDto) {
     return this.categoryService.create(createCategoryDto);
   }
 
@@ -24,7 +23,7 @@ export class CategoryController {
   }
 
   @Patch(':categoryId')
-  update(@Param('categoryId') categoryId: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+  update(@Param('categoryId') categoryId: string, @Body(ValidationPipe) updateCategoryDto: UpdateCategoryDto) {
     return this.categoryService.update(categoryId, updateCategoryDto);
   }
 
