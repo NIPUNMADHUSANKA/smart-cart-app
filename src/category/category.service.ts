@@ -1,45 +1,61 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { DatabaseService } from 'src/database/database.service';
-import { Prisma } from 'generated/prisma/client';
+import { DatabaseService } from '../database/database.service';
+import type { Prisma, Category as PrismaCategory } from '@prisma/client';
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly databaseService: DatabaseService){}
+  constructor(private readonly databaseService: DatabaseService) { }
 
-  async create(createCategoryDto: CreateCategoryDto) {
-    return this.databaseService.category.create({
-      data: createCategoryDto as unknown as Prisma.CategoryCreateInput
+  async create(createCategoryDto: CreateCategoryDto): Promise<PrismaCategory> {
+    try {
+      return await this.databaseService.category.create({
+        data: createCategoryDto as unknown as Prisma.CategoryCreateInput,
+      });
+    } catch (e) {
+      throw new Error("Category with these details already exists.");
+    }
+  }
+
+  async findAll(): Promise<PrismaCategory[]> {
+    return await this.databaseService.category.findMany({
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findAll() {
-    return this.databaseService.category.findMany();
-  }
-
-  async findOne(categoryId: string) {
-    return this.databaseService.category.findUnique({
-      where:{
-        categoryId : categoryId
-      } 
-    });
-  }
-
-  update(categoryId: string, updateCategoryDto: UpdateCategoryDto) {
-    return this.databaseService.category.update({
+  async findOne(categoryId: string): Promise<PrismaCategory | null> {
+    const category = await this.databaseService.category.findUnique({
       where: {
-        categoryId: categoryId
+        categoryId: categoryId,
       },
-      data: updateCategoryDto
     });
+    if (!category) {
+      throw new NotFoundException(`Category '${categoryId}' not found.`);
+    }
+    return category;
   }
 
-  remove(categoryId: string) {
-    return this.databaseService.category.delete({
-      where:{
-        categoryId: categoryId
-      }
-    });
+  async update(
+    categoryId: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<PrismaCategory | undefined> {
+    try {
+      return await this.databaseService.category.update({
+        where: { categoryId },
+        data: updateCategoryDto,
+      });
+    } catch (e) {
+    }
+  }
+
+  async remove(categoryId: string): Promise<PrismaCategory | undefined> {
+    try {
+      return await this.databaseService.category.delete({
+        where: { categoryId },
+      });
+    } catch (e) {
+
+    }
   }
 }
