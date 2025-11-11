@@ -1,21 +1,33 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { DatabaseService } from '../database/database.service';
-import type { Prisma, Category as PrismaCategory } from '@prisma/client';
-import { Category } from './entities/category.entity';
+import { Prisma, Category as PrismaCategory } from '@prisma/client';
 
 @Injectable()
 export class CategoryService {
   constructor(private readonly databaseService: DatabaseService) { }
-  
-  async create(createCategoryDto: CreateCategoryDto): Promise<PrismaCategory> {
+
+  async create(input: CreateCategoryDto & {userId}): Promise<PrismaCategory> {
     try {
       return await this.databaseService.category.create({
-        data: createCategoryDto as Category as Prisma.CategoryCreateInput,
+        data: {
+          categoryName: input.categoryName,
+          description: input.description,
+          status: input.status,
+          icon: input.icon,
+          priority: input.priority,
+          userId: input.userId,
+        } as Prisma.CategoryCreateInput
       });
-    } catch (e) {
-      throw new Error("Category with these details already exists.");
+    } catch (e: any) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === 'P2002') throw new BadRequestException('Category already exists');
+      }
+      if (e instanceof Prisma.PrismaClientValidationError) {
+        throw new BadRequestException('Invalid category payload (missing or wrong field types).');
+      }
+      throw new InternalServerErrorException('Failed to create category');
     }
   }
 

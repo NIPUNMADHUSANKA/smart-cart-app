@@ -1,22 +1,34 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+export enum CategoryStatus {
+  active = 'active',
+  completed = 'completed',
+}
+
+export enum CategoryPriority {
+  normal = 'normal',
+  low = 'low',
+  medium = 'medium',
+  high = 'high',
+}
+
 export class CreateCategoryDto {
-  
-  @IsString()
-  @IsNotEmpty()
-  categoryName;
-
-  @IsEnum(['active', 'completed'])
-  status;
 
   @IsString()
   @IsNotEmpty()
-  userId;
+  categoryName!: string;
 
   @IsString()
   @IsOptional()
-  icon;
+  description?: string;
 
-  @IsEnum(['normal', 'low', 'medium', 'high'])
-  priority;
+  @IsEnum(CategoryStatus)
+  status!: CategoryStatus;
+
+  @IsString()
+  @IsOptional()
+  icon?: string;
+
+  @IsEnum(CategoryPriority)
+  priority!: CategoryPriority;
 }

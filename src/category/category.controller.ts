@@ -7,20 +7,26 @@ import {
   Param,
   Delete,
   ValidationPipe,
+  UseGuards,
+  Request
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body(ValidationPipe) createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  create(@Body(ValidationPipe) createCategoryDto: CreateCategoryDto, @Request() request) {
+    const userId = request.user.userId;
+    return this.categoryService.create({...createCategoryDto, userId});
   }
 
+  @UseGuards(AuthGuard)
   @Get()
   findAll() {
     return this.categoryService.findAll();
