@@ -8,7 +8,7 @@ import { Prisma, Category as PrismaCategory } from '@prisma/client';
 export class CategoryService {
   constructor(private readonly databaseService: DatabaseService) { }
 
-  async create(input: CreateCategoryDto & {userId}): Promise<PrismaCategory> {
+  async create(input: CreateCategoryDto & { userId }): Promise<PrismaCategory> {
     try {
       return await this.databaseService.category.create({
         data: {
@@ -31,16 +31,18 @@ export class CategoryService {
     }
   }
 
-  async findAll(): Promise<PrismaCategory[]> {
+  async findAll(userId: string): Promise<PrismaCategory[]> {
     return await this.databaseService.category.findMany({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findOne(categoryId: string): Promise<PrismaCategory | null> {
+  async findOne(categoryId: string, userId: string): Promise<PrismaCategory | null> {
     const category = await this.databaseService.category.findUnique({
       where: {
         categoryId: categoryId,
+        userId: userId
       },
     });
     if (!category) {
@@ -52,23 +54,47 @@ export class CategoryService {
   async update(
     categoryId: string,
     updateCategoryDto: UpdateCategoryDto,
-  ): Promise<PrismaCategory | undefined> {
+    userId: string
+  ): Promise<PrismaCategory> {
     try {
-      return await this.databaseService.category.update({
-        where: { categoryId },
+      const { count } = await this.databaseService.category.updateMany({
+        where: { categoryId, userId },
         data: updateCategoryDto,
       });
-    } catch (e) {
+
+      if (count === 0) {
+        throw new NotFoundException(`Category '${categoryId}' not found`);
+      }
+
+      const updated = await this.databaseService.category.findUnique({ where: { categoryId } });
+      if (!updated) {
+        throw new NotFoundException(`Category '${categoryId}' not found`);
+      }
+      return updated;
+    } catch (e: any) {
+      if (e instanceof Prisma.PrismaClientValidationError) {
+        throw new BadRequestException('Invalid category update payload (missing or wrong field types).');
+      }
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new BadRequestException('Unique constraint violation while updating category');
+      }
+      throw new InternalServerErrorException('Failed to update category');
     }
   }
 
-  async remove(categoryId: string): Promise<PrismaCategory | undefined> {
+  async remove(categoryId: string, userId: string): Promise<void> {
     try {
-      return await this.databaseService.category.delete({
-        where: { categoryId },
-      });
-    } catch (e) {
+      const { count } = await this.databaseService.category.deleteMany({
+        where: {
+          categoryId,
+          userId
+        }
+      })
+      if (count === 0) throw new NotFoundException('Category not found');
 
+    } catch (error) {
+      if (error.code === 'P2025') throw new NotFoundException('Category not found');
+      throw new InternalServerErrorException('Failed to delete category');
     }
   }
 }
