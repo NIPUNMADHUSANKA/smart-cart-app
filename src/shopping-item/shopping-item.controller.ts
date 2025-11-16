@@ -1,39 +1,56 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe, UseGuards, Request, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { ShoppingItemService } from './shopping-item.service';
 import { CreateShoppingItemDto } from './dto/create-shopping-item.dto';
 import { UpdateShoppingItemDto } from './dto/update-shopping-item.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('shopping-item')
 export class ShoppingItemController {
-  constructor(private readonly shoppingItemService: ShoppingItemService) {}
+  constructor(private readonly shoppingItemService: ShoppingItemService) { }
 
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body(ValidationPipe) createShoppingItemDto: CreateShoppingItemDto) {
-    return this.shoppingItemService.create(createShoppingItemDto);
+  async create(@Body(ValidationPipe) createShoppingItemDto: CreateShoppingItemDto) {
+    return await this.shoppingItemService.create(createShoppingItemDto);
   }
 
+  @UseGuards(AuthGuard)
   @Get()
-  findAll() {
-    return this.shoppingItemService.findAll();
+  @HttpCode(HttpStatus.OK)
+  async findAll(@Request() request) {
+    const userId = request.user.userId;
+    return await this.shoppingItemService.findAll(userId);
   }
 
+  @UseGuards(AuthGuard)
   @Get(':itemId')
-  findOne(@Param('itemId') itemId: string) {
-    return this.shoppingItemService.findOne(itemId);
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Param('itemId', new ParseUUIDPipe({ version: '4' })) itemId: string, @Request() request) {
+    const userId = request.user.userId;
+    return await this.shoppingItemService.findOne(itemId, userId);
   }
 
+  @UseGuards(AuthGuard)
   @Get('/findByCategory/:categoryId')
-  findShoppingItemByCategory(@Param('categoryId') categoryId: string) {
-    return this.shoppingItemService.findShoppingItemByCategory(categoryId);
+  @HttpCode(HttpStatus.OK)
+  async findShoppingItemByCategory(@Param('categoryId', new ParseUUIDPipe({ version: '4' })) categoryId: string, @Request() request) {
+    const userId = request.user.userId;
+    return await this.shoppingItemService.findShoppingItemByCategory(categoryId, userId);
   }
 
+  @UseGuards(AuthGuard)
   @Patch(':itemId')
-  update(@Param('itemId') itemId: string, @Body(ValidationPipe) updateShoppingItemDto: UpdateShoppingItemDto) {
-    return this.shoppingItemService.update(itemId, updateShoppingItemDto);
+  @HttpCode(HttpStatus.OK)
+  async update(@Param('itemId', new ParseUUIDPipe({ version: '4' })) itemId: string, @Request() request, @Body(ValidationPipe) updateShoppingItemDto: UpdateShoppingItemDto) {
+    const userId = request.user.userId;
+    return await this.shoppingItemService.update(itemId, updateShoppingItemDto, userId);
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':itemId')
-  remove(@Param('itemId') itemId: string) {
-    return this.shoppingItemService.remove(itemId);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Param('itemId', new ParseUUIDPipe({ version: '4' })) itemId: string, @Request() request) {
+    const userId = request.user.userId;
+    return await this.shoppingItemService.remove(itemId, userId);
   }
 }

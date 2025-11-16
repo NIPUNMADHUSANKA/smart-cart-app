@@ -51,8 +51,6 @@ export class CategoryController {
     @Request() request,
     @Body(ValidationPipe) updateCategoryDto: UpdateCategoryDto,
   ) {
-    console.log("work")
-
     const userId = request.user.userId;
     return await this.categoryService.update(categoryId, updateCategoryDto, userId);
   }

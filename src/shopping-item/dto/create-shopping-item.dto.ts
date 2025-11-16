@@ -1,26 +1,55 @@
-import { IsEnum, IsNotEmpty, IsString } from "class-validator"
+import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+export enum ItemStatus {
+  active = 'active',
+  archived = 'archived',
+}
+
+export enum PriorityStatus {
+  normal = 'normal',
+  low = 'low',
+  medium = 'medium',
+  high = 'high',
+}
+
+export enum UnitStatus {
+  kg = 'kg',
+  piece = 'piece',
+  pack = 'pack',
+  dozen = 'dozen',
+  box = 'box',
+  gram = 'gram',
+  litre = 'litre',
+  milliLitre = 'milliLitre',
+  bottle = 'bottle',
+  can = 'can',
+  cup = 'cup',
+  other = 'other',
+}
 
 export class CreateShoppingItemDto {
-  
-    @IsString()
-    @IsNotEmpty()
-    itemName
+  @IsString()
+  @IsNotEmpty()
+  itemName!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    quantity
+  @IsInt()
+  @IsNotEmpty()
+  quantity!: number;
 
-    @IsString()
-    @IsNotEmpty()
-    unit
+  @IsEnum(UnitStatus)
+  unit!: UnitStatus;
 
-    @IsEnum(['active', 'archived'])
-    status
-  
-    @IsString()
-    @IsNotEmpty()
-    categoryId
+  @IsEnum(ItemStatus)
+  status!: ItemStatus;
 
-    @IsEnum(['normal', 'low', 'medium', 'high'])
-    priority
+  @IsString()
+  @IsNotEmpty()
+  categoryId!: string;
+
+  @IsEnum(PriorityStatus)
+  priority!: PriorityStatus;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
 }

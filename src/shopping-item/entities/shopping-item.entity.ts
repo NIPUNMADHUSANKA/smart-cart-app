@@ -1,15 +1,28 @@
 export type ItemStatus = 'active' | 'archived';
 export type PriorityStatus = 'normal' | 'low' | 'medium' | 'high';
+export type UnitStatus =
+  | 'kg'
+  | 'piece'
+  | 'pack'
+  | 'dozen'
+  | 'box'
+  | 'gram'
+  | 'litre'
+  | 'milliLitre'
+  | 'bottle'
+  | 'can'
+  | 'cup'
+  | 'other';
 
 export class ShoppingItem {
-    itemId!: String;
-    itemName!: String;
-    description!: String;
-    quantity!: String;
-    unit!: String;
-    status!: ItemStatus;
-    categoryId!: String;
-    priority!: PriorityStatus;
-    createdAt!: Date;
-    updatedAt!: Date;
+  itemId!: string;
+  itemName!: string;
+  description!: string;
+  quantity!: number;
+  unit!: UnitStatus;
+  status!: ItemStatus;
+  categoryId!: string;
+  priority!: PriorityStatus;
+  createdAt!: Date;
+  updatedAt!: Date;
 }
