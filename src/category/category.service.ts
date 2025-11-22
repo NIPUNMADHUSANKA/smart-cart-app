@@ -2,10 +2,10 @@ import { BadRequestException, HttpException, HttpStatus, Injectable, InternalSer
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { DatabaseService } from '../database/database.service';
-import { Prisma, Category as PrismaCategory } from 'generated/prisma/client';
+import { Prisma, Category as PrismaCategory } from '@prisma/client';
 
 @Injectable()
-export class CategoryService {
+export class CategoryService { 
   constructor(private readonly databaseService: DatabaseService) { }
 
   async create(input: CreateCategoryDto & { userId }): Promise<PrismaCategory> {

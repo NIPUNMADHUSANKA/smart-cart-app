@@ -2,25 +2,24 @@ import { BadRequestException, HttpException, HttpStatus, Injectable, InternalSer
 import { CreateShoppingItemDto } from './dto/create-shopping-item.dto';
 import { UpdateShoppingItemDto } from './dto/update-shopping-item.dto';
 import { DatabaseService } from 'src/database/database.service';
-import { ShoppingItem } from './entities/shopping-item.entity';
-import { Prisma } from 'generated/prisma/client';
+import { Prisma, ShoppingItem as PrismaShoppingItem } from '@prisma/client';
 
 @Injectable()
 export class ShoppingItemService {
   constructor(private readonly databaseService: DatabaseService) { }
 
-  async create(input: CreateShoppingItemDto): Promise<ShoppingItem> {
+  async create(input: CreateShoppingItemDto): Promise<PrismaShoppingItem> {
     try {
       return await this.databaseService.shoppingItem.create({
         data: {
-        itemName: input.itemName,
-        description: input.description,
-        quantity: input.quantity,
-        unit: input.unit,
-        status: input.status,
-        priority: input.priority,
-        category: {connect: {categoryId: input.categoryId}}
-        } as Prisma.ShoppingItemCreateInput 
+          itemName: input.itemName,
+          description: input.description ?? '',
+          quantity: input.quantity,
+          unit: input.unit,
+          status: input.status,
+          priority: input.priority,
+          category: { connect: { categoryId: input.categoryId } }
+        } as Prisma.ShoppingItemCreateInput
       });
     } catch (e: any) {
       if(e instanceof Prisma.PrismaClientKnownRequestError){
@@ -29,11 +28,11 @@ export class ShoppingItemService {
       if(e instanceof Prisma.PrismaClientValidationError){
         throw new BadRequestException('Invalid Shopping Item payload (missing or wrong field types).');
       }
-      throw new InternalServerErrorException("Failed to create Shopping Item");
+      throw new InternalServerErrorException(`Failed to create Shopping Item`);
     }
   }
 
-  async findAll(userId): Promise<ShoppingItem[]> {
+  async findAll(userId: string): Promise<PrismaShoppingItem[]> {
     return await this.databaseService.shoppingItem.findMany({
       orderBy: { createdAt: 'desc' },
       where: {
@@ -44,7 +43,7 @@ export class ShoppingItemService {
     });
   }
 
-  async findOne(itemId: string, userId: string): Promise<ShoppingItem | null> {
+  async findOne(itemId: string, userId: string): Promise<PrismaShoppingItem | null> {
     const shoppingItem = await this.databaseService.shoppingItem.findUnique({
       where: {
         itemId: itemId,
@@ -59,7 +58,7 @@ export class ShoppingItemService {
     return shoppingItem;
   }
 
-  async findShoppingItemByCategory(categoryId: string, userId: string): Promise<ShoppingItem[] | null> {
+  async findShoppingItemByCategory(categoryId: string, userId: string): Promise<PrismaShoppingItem[] | null> {
     const shoppingItems = await this.databaseService.shoppingItem.findMany({
       where: {
         categoryId: categoryId,
@@ -74,25 +73,42 @@ export class ShoppingItemService {
     return shoppingItems;
   }
 
-  async update(itemId: string, updateShoppingItemDto: UpdateShoppingItemDto, userId:string): Promise<ShoppingItem> {
+  async update(itemId: string, updateShoppingItemDto: UpdateShoppingItemDto, userId: string): Promise<PrismaShoppingItem> {
     try {
+      const data: Prisma.ShoppingItemUpdateManyMutationInput = {};
+
+      if (updateShoppingItemDto.itemName !== undefined) {
+        data.itemName = updateShoppingItemDto.itemName;
+      }
+      if (updateShoppingItemDto.description !== undefined) {
+        data.description = updateShoppingItemDto.description;
+      }
+      if (updateShoppingItemDto.quantity !== undefined) {
+        data.quantity = updateShoppingItemDto.quantity;
+      }
+      if (updateShoppingItemDto.unit !== undefined) {
+        data.unit = updateShoppingItemDto.unit;
+      }
+      if (updateShoppingItemDto.status !== undefined) {
+        data.status = updateShoppingItemDto.status;
+      }
+      if (updateShoppingItemDto.priority !== undefined) {
+        data.priority = updateShoppingItemDto.priority;
+      }
+
       const {count} = await this.databaseService.shoppingItem.updateMany({
-        where: { 
+        where: {
           itemId,
           category: { userId }
         },
-        data: updateShoppingItemDto
+        data
       });
 
       if (count === 0) {
         throw new NotFoundException(`Shopping Item '${itemId}' not found`);
       }
 
-      const updated = await this.databaseService.shoppingItem.findUnique({
-        where: {
-          itemId
-        }
-      });
+      const updated = await this.databaseService.shoppingItem.findUnique({ where: { itemId } });
       if (!updated) {
         throw new NotFoundException(`Shopping Item '${itemId}' not found after update.`);
       }
