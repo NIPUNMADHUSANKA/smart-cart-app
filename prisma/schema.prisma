@@ -10,6 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Category{
@@ -37,6 +38,16 @@ model ShoppingItem{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt 
   category Category @relation(fields: [categoryId], references: [categoryId])
+}
+
+model User {
+  userId    String   @id @default(uuid())
+  fullName  String
+  userName  String   @unique
+  email     String   @unique
+  password  String   
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum CategoryStatus{
