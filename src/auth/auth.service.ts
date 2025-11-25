@@ -1,12 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DatabaseService } from 'src/database/database.service';
-import { UserService } from 'src/user/user.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { CreateLoginDto } from './dto/create-login.dto';
 
-type AuthInput = { username: string; password: string }
 type SignInData = { userId: string; username: string }
 type AuthResult = { accessToken: string; userId: string; username: string };
 type PublicUser = Omit<User, 'password'>;
@@ -15,7 +14,6 @@ type PublicUser = Omit<User, 'password'>;
 export class AuthService {
     private readonly saltRounds = 10;
     constructor(
-        private readonly userService: UserService,
         private readonly jwtService: JwtService,
         private readonly databaseService: DatabaseService,
     ) { }
@@ -45,38 +43,44 @@ export class AuthService {
     }
 
 
-    async hashPassword(password: string): Promise<string>{
+    async hashPassword(password: string): Promise<string> {
         return await bcrypt.hash(password, this.saltRounds);
     }
 
-    async comparePassword(password: string, hashedPassword: string): Promise<boolean>{
+    async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
         return await bcrypt.compare(password, hashedPassword);
     }
 
-    async authenticate(input: AuthInput): Promise<AuthResult> {
+    async authenticate(input: CreateLoginDto): Promise<AuthResult> {
         const user = await this.validateUser(input);
-
-        if(!user){
-            throw new UnauthorizedException();
-        }
-
         return this.signIn(user);
     }
 
-    async validateUser(input: AuthInput): Promise<SignInData | null> {
-        const user = await this.userService.findUserByName(input.username);
+    async validateUser(input: CreateLoginDto): Promise<SignInData> {
+        let user: User | null = null;
+        try {
+            user = await this.databaseService.user.findUnique({
+                where: { userName: input.username }
+            });
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientValidationError) {
+                throw new BadRequestException('Invalid login payload.');
+            }
+            throw new InternalServerErrorException('Failed to validate credentials.');
+        }
 
-        if (user && user.password === input.password) {
-            return {
-                userId: user.userId,
-                username: user.username
-            };
+        const passwordValid = user && await this.comparePassword(input.password, user.password);
+        if (!user || !passwordValid) {
+            throw new UnauthorizedException('Invalid credentials');
+        }
+
+        return {
+            userId: user.userId,
+            username: user.userName
         };
-
-        return null;
     }
 
-    async signIn(user: SignInData): Promise<AuthResult>{
+    async signIn(user: SignInData): Promise<AuthResult> {
         const tokenPayload = {
             sub: user.userId,
             username: user.username

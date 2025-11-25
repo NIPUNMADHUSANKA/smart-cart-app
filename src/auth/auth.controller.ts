@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards, 
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { CreateAuthDto } from './dto/create-auth.dto';
+import { CreateLoginDto } from './dto/create-login.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -10,13 +11,13 @@ export class AuthController {
 
     @HttpCode(HttpStatus.OK)
     @Post('login')
-    login(@Body() input: {username: string; password: string}){
+    login(@Body(new ValidationPipe) input: CreateLoginDto){
         return this.authService.authenticate(input);
     }
 
     @HttpCode(HttpStatus.CREATED)
     @Post('register')
-    async register(
+    register(
         @Body(new ValidationPipe)
         createAuthDto: CreateAuthDto
     ){
