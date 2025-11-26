@@ -6,8 +6,8 @@ import { Prisma, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CreateLoginDto } from './dto/create-login.dto';
 
-type SignInData = { userId: string; username: string }
-type AuthResult = { accessToken: string; userId: string; username: string };
+type SignInData = { userId: string; userName: string }
+type AuthResult = { accessToken: string; userId: string; userName: string };
 type PublicUser = Omit<User, 'password'>;
 
 @Injectable()
@@ -60,7 +60,7 @@ export class AuthService {
         let user: User | null = null;
         try {
             user = await this.databaseService.user.findUnique({
-                where: { userName: input.username }
+                where: { userName: input.userName }
             });
         } catch (error) {
             if (error instanceof Prisma.PrismaClientValidationError) {
@@ -76,20 +76,20 @@ export class AuthService {
 
         return {
             userId: user.userId,
-            username: user.userName
+            userName: user.userName
         };
     }
 
     async signIn(user: SignInData): Promise<AuthResult> {
         const tokenPayload = {
             sub: user.userId,
-            username: user.username
+            username: user.userName
         };
         const accessToken = await this.jwtService.signAsync(tokenPayload);
 
         return {
             accessToken,
-            username: user.username,
+            userName: user.userName,
             userId: user.userId
         };
     }

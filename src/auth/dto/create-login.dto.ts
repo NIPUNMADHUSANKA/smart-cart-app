@@ -4,7 +4,7 @@ export class CreateLoginDto {
 
     @IsString()
     @IsNotEmpty()
-    username!: string
+    userName!: string
 
     @IsString()
     @MinLength(6)
