@@ -5,12 +5,12 @@ import { User } from './entities/user.entity';
 const users: User[] = [
     {
         userId: '1',
-        username: 'Alice',
+        userName: 'Alice',
         password: '123'
     },
     {
         userId: '2',
-        username: 'Pet',
+        userName: 'Pet',
         password: '456'
     }
 ]
@@ -19,8 +19,8 @@ const users: User[] = [
 
 @Injectable()
 export class UserService {
-    async findUserByName(username: String): Promise<User |undefined>{
-        return users.find((user) => user.username === username);
+    async findUserByName(userName: String): Promise<User |undefined>{
+        return users.find((user) => user.userName === userName);
     }
 
 }

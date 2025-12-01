@@ -83,7 +83,7 @@ export class AuthService {
     async signIn(user: SignInData): Promise<AuthResult> {
         const tokenPayload = {
             sub: user.userId,
-            username: user.userName
+            userName: user.userName
         };
         const accessToken = await this.jwtService.signAsync(tokenPayload);
 
