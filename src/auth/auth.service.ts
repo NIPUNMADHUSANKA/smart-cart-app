@@ -33,7 +33,7 @@ export class AuthService {
             return userWithoutPassword;
         } catch (e) {
             if (e instanceof Prisma.PrismaClientKnownRequestError) {
-                if (e.code === 'P2002') throw new BadRequestException('User already exists');
+                if (e.code === 'P2002') throw new BadRequestException('This email or username is already registered. Please log in instead.');
             }
             if (e instanceof Prisma.PrismaClientValidationError) {
                 throw new BadRequestException('Invalid user payload (missing or wrong field types).');
