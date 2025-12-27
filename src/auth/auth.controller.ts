@@ -30,4 +30,9 @@ export class AuthController {
         return request.user;
     }
 
+    @UseGuards(AuthGuard)
+    @Get('info')
+    getUserDetails(@Request() request){
+        return this.authService.userDetails(request.user.userId, request.user.userName);
+    }
 }

@@ -93,4 +93,25 @@ export class AuthService {
             userId: user.userId
         };
     }
+
+    async userDetails(userId: string, userName: string): Promise<PublicUser|null> {
+        try {
+            const userInfo = await this.databaseService.user.findUnique({
+                where: {
+                    userId: userId,
+                    userName: userName
+                }
+            })
+            if(userInfo){
+                 const { password, ...userInfoData} = userInfo;
+                 return userInfoData;
+            }
+            return null;
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientValidationError) {
+                throw new BadRequestException('Invalid login payload.');
+            }
+            throw new InternalServerErrorException('Failed to validate credentials.');
+        }
+    }
 }
