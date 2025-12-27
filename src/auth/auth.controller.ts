@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Request, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { CreateAuthDto } from './dto/create-auth.dto';
@@ -34,5 +34,13 @@ export class AuthController {
     @Get('info')
     getUserDetails(@Request() request){
         return this.authService.userDetails(request.user.userId, request.user.userName);
+    }
+
+    @UseGuards(AuthGuard)
+    @Delete('remove')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    deleteUser(@Request() request){
+        const userId = request.user.userId;
+        this.authService.remove(userId);
     }
 }

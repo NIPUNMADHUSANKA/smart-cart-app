@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DatabaseService } from 'src/database/database.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
@@ -94,7 +94,7 @@ export class AuthService {
         };
     }
 
-    async userDetails(userId: string, userName: string): Promise<PublicUser|null> {
+    async userDetails(userId: string, userName: string): Promise<PublicUser | null> {
         try {
             const userInfo = await this.databaseService.user.findUnique({
                 where: {
@@ -102,9 +102,9 @@ export class AuthService {
                     userName: userName
                 }
             })
-            if(userInfo){
-                 const { password, ...userInfoData} = userInfo;
-                 return userInfoData;
+            if (userInfo) {
+                const { password, ...userInfoData } = userInfo;
+                return userInfoData;
             }
             return null;
         } catch (error) {
@@ -112,6 +112,21 @@ export class AuthService {
                 throw new BadRequestException('Invalid login payload.');
             }
             throw new InternalServerErrorException('Failed to validate credentials.');
+        }
+    }
+
+    async remove(userId: string) {
+        try {
+            await this.databaseService.$transaction([
+                this.databaseService.shoppingItem.deleteMany({ where: { category: { userId } } }),
+                this.databaseService.category.deleteMany({ where: { userId } }),
+                this.databaseService.user.delete({ where: { userId } }),
+            ]);
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+                throw new NotFoundException('User not found');
+            }
+            throw new InternalServerErrorException('Failed to delete user');
         }
     }
 }
