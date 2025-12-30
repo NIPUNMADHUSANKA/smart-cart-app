@@ -129,4 +129,43 @@ export class AuthService {
             throw new InternalServerErrorException('Failed to delete user');
         }
     }
+
+    async updatePassword(userId: string, newPassword: string) {
+        try {
+            const hashed = await this.hashPassword(newPassword);
+            return await this.databaseService.user.update({
+                where: { userId },
+                data: { password: hashed },
+            });
+
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+                throw new NotFoundException('User not found');
+            }
+
+            if (error instanceof Prisma.PrismaClientValidationError) {
+                throw new BadRequestException('Invalid change password payload.');
+            }
+
+            throw new InternalServerErrorException('Failed to update password.');
+
+        }
+    }
+
+    async resetPassword(userId: string, currentPassword: string, newPassword: string) {
+        const user = await this.databaseService.user.findUnique({
+            where: { userId },
+            select: { password: true },
+        });
+
+        if (!user) throw new NotFoundException('User not found');
+
+        const passwordValid = await this.comparePassword(currentPassword, user.password);
+        if (!passwordValid) throw new UnauthorizedException('Invalid password');
+
+        const sameAsOld = await this.comparePassword(newPassword, user.password);
+        if (sameAsOld) throw new BadRequestException('New password must be different from current password');
+
+        await this.updatePassword(userId, newPassword);
+    }
 }
