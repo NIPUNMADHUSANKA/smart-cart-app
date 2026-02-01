@@ -1,14 +1,14 @@
 # SmartCart API
 
 Backend REST API for the SmartCart grocery shopping assistant, built with NestJS and Prisma.
-This project demonstrates a modular backend architecture, JWT-based authentication,
-and clean data access using Prisma ORM.
+Includes AI-powered shopping list generation using the OpenAI API.
 
 ## Features
 - User registration and login with JWT access tokens
 - Password reset flow
 - Category CRUD
 - Shopping item CRUD with category filtering
+- AI shopping list generation and confirmation into saved categories/items
 - Global validation and exception filters
 
 ## Tech Stack
@@ -18,6 +18,7 @@ and clean data access using Prisma ORM.
 - Prisma ORM
 - PostgreSQL (or any Prisma-supported database)
 - JWT and Passport
+- OpenAI API (chat completions)
 
 ## Architecture
 - Modular NestJS structure with controllers, services, and DTOs
@@ -27,6 +28,7 @@ and clean data access using Prisma ORM.
 ## Project Structure
 ```
 src/
+  ai-model/
   auth/
   category/
   shopping-item/
@@ -38,6 +40,11 @@ prisma/
   schema.prisma
 test/
 ```
+
+## Requirements
+- Node.js (LTS recommended)
+- PostgreSQL (or a Prisma-supported database)
+- OpenAI API key (required for AI endpoints)
 
 ## Getting Started
 1. Install dependencies:
@@ -56,6 +63,7 @@ The API will be available at `http://localhost:3000/api/smart-cart`.
 ```
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 JWT_SECRET=your_jwt_secret
+OPENAI_API_KEY=your_openai_api_key
 PORT=3000
 ```
 
@@ -92,6 +100,17 @@ Shopping items:
 - `GET /shopping-item/findByCategory/:categoryId`
 - `PATCH /shopping-item/:itemId`
 - `DELETE /shopping-item/:itemId`
+
+AI model (requires auth and `OPENAI_API_KEY`):
+- `POST /ai-model` (body: `{ "prompt": "I want to cook fried rice for 2 people" }`)
+- `GET /ai-model`
+- `POST /ai-model/addAIShoppingItem`
+- `PATCH /ai-model/updateAIShoppingItem`
+- `POST /ai-model/regenerateAIShopping`
+- `POST /ai-model/confirmAIShopping`
+- `DELETE /ai-model/deleteAIShoppingItem/:categoryId/:itemId`
+- `DELETE /ai-model/deleteAISuggestion/:suggestionId`
+- `DELETE /ai-model/:categoryId`
 
 ## Scripts
 - `npm run start:dev` - run the API in watch mode
