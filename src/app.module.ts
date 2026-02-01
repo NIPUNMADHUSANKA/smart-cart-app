@@ -7,9 +7,10 @@ import { CategoryModule } from './category/category.module';
 import { ShoppingItemModule } from './shopping-item/shopping-item.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { AiModelModule } from './ai-model/ai-model.module';
 
 @Module({
-  imports: [DatabaseModule, CategoryModule, ShoppingItemModule, UserModule, AuthModule],
+  imports: [DatabaseModule, CategoryModule, ShoppingItemModule, UserModule, AuthModule, AiModelModule],
   controllers: [AppController],
   providers: [AppService, DatabaseService],
 })

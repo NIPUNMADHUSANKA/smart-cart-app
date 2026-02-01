@@ -1,43 +1,36 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-model Category{
-  categoryId String @id @default(uuid())
-  categoryName String
-  description String
-  status CategoryStatus @default(active)
-  userId String
-  icon String
-  priority PriorityStatus @default(normal)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Category {
+  categoryId    String         @id @default(uuid())
+  categoryName  String
+  description   String
+  status        CategoryStatus @default(active)
+  userId        String
+  icon          String
+  priority      PriorityStatus @default(normal)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   shoppingItems ShoppingItem[]
 }
 
-model ShoppingItem{
-  itemId String @id @default(uuid())
-  itemName String
+model ShoppingItem {
+  itemId      String         @id @default(uuid())
+  itemName    String
   description String
-  quantity Int
-  unit UnitStatus @default(kg)
-  status ItemStatus @default(active)
-  categoryId String
-  priority PriorityStatus @default(normal)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt 
-  category Category @relation(fields: [categoryId], references: [categoryId])
+  status      ItemStatus     @default(active)
+  categoryId  String
+  priority    PriorityStatus @default(normal)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  quantity    Int
+  unit        UnitStatus     @default(kg)
+  category    Category       @relation(fields: [categoryId], references: [categoryId])
 }
 
 model User {
@@ -45,37 +38,64 @@ model User {
   fullName  String
   userName  String   @unique
   email     String   @unique
-  password  String   
+  password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum CategoryStatus{
+model AiSuggestion {
+  id         String       @id @default(uuid())
+  userId     String
+  prompt     String
+  createdAt  DateTime     @default(now())
+  categories AICategory[]
+}
+
+model AICategory {
+  id           String         @id @default(uuid())
+  suggestionId String
+  categoryName String
+  priority     PriorityStatus @default(normal)
+  AiSuggestion AiSuggestion   @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+  items        AIItem[]
+}
+
+model AIItem {
+  id         String          @id @default(uuid())
+  categoryId String
+  itemName   String
+  quantity   Float?
+  unit       UnitStatus?
+  priority   PriorityStatus?
+  AICategory AICategory      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+enum CategoryStatus {
   active
   completed
 }
 
-enum ItemStatus{
+enum ItemStatus {
   active
   archived
 }
 
-enum PriorityStatus{
+enum PriorityStatus {
   normal
   low
   medium
   high
 }
 
-enum UnitStatus{
+enum UnitStatus {
   kg
   piece
   pack
   dozen
   box
-  gram
-  litre
-  milliLitre
+  g
+  l
+  ml
   bottle
   can
   cup
