@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { OpenAI } from 'openai';
 import 'dotenv/config';
@@ -28,26 +29,33 @@ type ChatMessage = {
 
 @Injectable()
 export class AiModelService {
-  private readonly openai: OpenAI;
+  private openai: OpenAI | null = null;
+  private openaiApiKey: string | null = null;
   private readonly model = 'gpt-4.1-mini';
 
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly categoryService: CategoryService,
   ) {
-    if (!process.env.OPENAI_API_KEY)
-      throw new InternalServerErrorException(
-        'Missing OPENAI_API_KEY in environment variables',
-      );
+  }
 
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+  private getOpenAIClient(): OpenAI {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new ServiceUnavailableException(
+        'OPENAI_API_KEY is not configured on the server',
+      );
+    }
+    if (!this.openai || this.openaiApiKey !== apiKey) {
+      this.openai = new OpenAI({ apiKey });
+      this.openaiApiKey = apiKey;
+    }
+    return this.openai;
   }
 
   async fetchOpenAICompletion(userId: string, messages: ChatMessage[]) {
     try {
-      const output = await this.openai.chat.completions.create({
+      const output = await this.getOpenAIClient().chat.completions.create({
         model: this.model,
         messages,
       });
